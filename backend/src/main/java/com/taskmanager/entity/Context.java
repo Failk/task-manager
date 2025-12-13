@@ -21,13 +21,22 @@ public class Context {
     
     @Column(nullable = false, unique = true)
     private String name;
-    
+
+    @Column(length = 200)
+    private String description;
+
+    private String color;
+
     private String icon;
-    
+
+    @Column(name = "is_default", nullable = false)
+    @Builder.Default
+    private boolean isDefault = false;
+
     @ManyToMany(mappedBy = "contexts")
     @Builder.Default
     private Set<Task> tasks = new HashSet<>();
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user; // null for system defaults like @home, @office
@@ -36,6 +45,7 @@ public class Context {
         return Context.builder()
                 .name(name)
                 .icon(icon)
+                .isDefault(true)
                 .build();
     }
 }

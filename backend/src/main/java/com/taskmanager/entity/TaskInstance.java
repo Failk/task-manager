@@ -73,11 +73,28 @@ public class TaskInstance {
         this.status = TaskStatus.COMPLETED;
         this.completedAt = LocalDateTime.now();
     }
-    
+
+    public void skip() {
+        this.skipped = true;
+        this.status = TaskStatus.DEFERRED;
+    }
+
     public void overrideForInstance(String title, String description, LocalDateTime dueDate) {
         this.overridden = true;
         this.overriddenTitle = title;
         this.overriddenDescription = description;
         this.overriddenDueDate = dueDate;
+    }
+
+    public LocalDate getScheduledDate() {
+        return instanceDate;
+    }
+
+    public String getOverrideTitle() {
+        return overriddenTitle;
+    }
+
+    public String getOverrideDescription() {
+        return overriddenDescription;
     }
 }

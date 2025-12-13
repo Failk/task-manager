@@ -33,7 +33,7 @@ public class ContextController {
     @Operation(summary = "Get all contexts (default + user-specific)")
     public ResponseEntity<List<ContextResponse>> getAllContexts(
             @AuthenticationPrincipal User user) {
-        List<Context> contexts = contextRepository.findByUserIdOrDefault(user.getId());
+        List<Context> contexts = contextRepository.findAllAvailableForUser(user.getId());
         List<ContextResponse> response = contexts.stream()
                 .map(this::toResponse)
                 .toList();

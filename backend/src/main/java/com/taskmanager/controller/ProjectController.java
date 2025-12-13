@@ -30,7 +30,9 @@ public class ProjectController {
     public ResponseEntity<List<ProjectDto.ProjectListResponse>> getAllProjects(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "false") boolean includeArchived) {
-        List<Project> projects = projectService.findByUser(user.getId(), includeArchived);
+        List<Project> projects = includeArchived
+                ? projectService.findAllByUserId(user.getId())
+                : projectService.findActiveByUserId(user.getId());
         List<ProjectDto.ProjectListResponse> response = projects.stream()
                 .map(projectService::toListResponse)
                 .toList();
@@ -42,7 +44,7 @@ public class ProjectController {
     public ResponseEntity<ProjectDto.ProjectResponse> getProject(
             @AuthenticationPrincipal User user,
             @PathVariable Long id) {
-        Project project = projectService.findByIdAndUser(id, user.getId());
+        Project project = projectService.findByIdAndUserId(id, user.getId());
         return ResponseEntity.ok(projectService.toResponse(project));
     }
     
@@ -50,8 +52,8 @@ public class ProjectController {
     @Operation(summary = "Create a new project")
     public ResponseEntity<ProjectDto.ProjectResponse> createProject(
             @AuthenticationPrincipal User user,
-            @Valid @RequestBody ProjectDto.CreateProjectRequest request) {
-        Project project = projectService.create(user.getId(), request);
+            @Valid @RequestBody ProjectDto.CreateRequest request) {
+        Project project = projectService.create(user.getId(), request, user);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(projectService.toResponse(project));
     }
@@ -61,7 +63,7 @@ public class ProjectController {
     public ResponseEntity<ProjectDto.ProjectResponse> updateProject(
             @AuthenticationPrincipal User user,
             @PathVariable Long id,
-            @Valid @RequestBody ProjectDto.UpdateProjectRequest request) {
+            @Valid @RequestBody ProjectDto.UpdateRequest request) {
         Project project = projectService.update(id, user.getId(), request);
         return ResponseEntity.ok(projectService.toResponse(project));
     }

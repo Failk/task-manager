@@ -19,6 +19,12 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
            "AND r.task.status != 'COMPLETED' " +
            "AND (r.snoozedUntil IS NULL OR r.snoozedUntil <= :now)")
     List<Reminder> findPendingReminders(@Param("now") LocalDateTime now);
+
+    @Query("SELECT r FROM Reminder r WHERE r.task.project.user.id = :userId " +
+           "AND r.sent = false AND r.acknowledged = false " +
+           "AND r.task.status != 'COMPLETED' " +
+           "AND (r.snoozedUntil IS NULL OR r.snoozedUntil <= :now)")
+    List<Reminder> findPendingReminders(@Param("userId") Long userId, @Param("now") LocalDateTime now);
     
     @Query("SELECT r FROM Reminder r WHERE r.reminderType = :type AND r.sent = false " +
            "AND r.task.status != 'COMPLETED' " +

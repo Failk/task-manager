@@ -85,4 +85,15 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return enabled;
     }
+
+    public String getFullName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        } else if (firstName != null) {
+            return firstName;
+        } else if (lastName != null) {
+            return lastName;
+        }
+        return username;
+    }
 }

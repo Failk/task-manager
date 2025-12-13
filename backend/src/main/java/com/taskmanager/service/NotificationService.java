@@ -9,7 +9,6 @@ import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.observer.NotificationObserver;
 import com.taskmanager.observer.NotificationSubject;
 import com.taskmanager.repository.ReminderRepository;
-import com.taskmanager.repository.TaskRepository;
 import com.taskmanager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +30,6 @@ import java.util.List;
 public class NotificationService implements NotificationSubject {
     
     private final ReminderRepository reminderRepository;
-    private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final List<NotificationObserver> observers;
     
@@ -146,10 +143,9 @@ public class NotificationService implements NotificationSubject {
         if (prefs == null) {
             prefs = NotificationPreferences.builder()
                     .user(user)
-                    .emailNotificationsEnabled(true)
-                    .popupNotificationsEnabled(true)
+                    .emailEnabled(true)
+                    .popupEnabled(true)
                     .dailyDigestEnabled(false)
-                    .quietHoursEnabled(false)
                     .build();
         }
         return prefs;
@@ -171,19 +167,16 @@ public class NotificationService implements NotificationSubject {
         }
         
         if (request.getEmailNotificationsEnabled() != null) {
-            prefs.setEmailNotificationsEnabled(request.getEmailNotificationsEnabled());
+            prefs.setEmailEnabled(request.getEmailNotificationsEnabled());
         }
         if (request.getPopupNotificationsEnabled() != null) {
-            prefs.setPopupNotificationsEnabled(request.getPopupNotificationsEnabled());
+            prefs.setPopupEnabled(request.getPopupNotificationsEnabled());
         }
         if (request.getDailyDigestEnabled() != null) {
             prefs.setDailyDigestEnabled(request.getDailyDigestEnabled());
         }
         if (request.getDailyDigestTime() != null) {
             prefs.setDailyDigestTime(request.getDailyDigestTime());
-        }
-        if (request.getQuietHoursEnabled() != null) {
-            prefs.setQuietHoursEnabled(request.getQuietHoursEnabled());
         }
         if (request.getQuietHoursStart() != null) {
             prefs.setQuietHoursStart(request.getQuietHoursStart());

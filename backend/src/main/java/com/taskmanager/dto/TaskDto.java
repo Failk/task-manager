@@ -117,8 +117,8 @@ public class TaskDto {
         private Integer estimatedDurationMinutes;
         private String taskType;
         private boolean overdue;
-        
-        private ProjectDto.ProjectListResponse project;
+
+        private TaskDto.ProjectListResponse project;
         private List<String> contextTags;
         private List<ReminderResponse> reminders;
         private RecurrencePatternResponse recurrencePattern;

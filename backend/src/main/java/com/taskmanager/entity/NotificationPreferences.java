@@ -29,11 +29,18 @@ public class NotificationPreferences {
     @Column(nullable = false)
     @Builder.Default
     private boolean popupEnabled = true;
-    
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean dailyDigestEnabled = false;
+
+    @Column
+    private LocalTime dailyDigestTime;
+
     @Column(nullable = false)
     @Builder.Default
     private Long defaultLeadTimeMinutes = 60L; // Default 1 hour
-    
+
     private LocalTime quietHoursStart;
     private LocalTime quietHoursEnd;
     
@@ -56,5 +63,26 @@ public class NotificationPreferences {
             // Quiet hours span midnight
             return !now.isBefore(quietHoursStart) || !now.isAfter(quietHoursEnd);
         }
+    }
+
+    // Helper methods for controller compatibility
+    public boolean isEmailNotificationsEnabled() {
+        return emailEnabled;
+    }
+
+    public boolean isPopupNotificationsEnabled() {
+        return popupEnabled;
+    }
+
+    public boolean isDailyDigestEnabled() {
+        return dailyDigestEnabled;
+    }
+
+    public LocalTime getDailyDigestTime() {
+        return dailyDigestTime;
+    }
+
+    public boolean isQuietHoursEnabled() {
+        return quietHoursStart != null && quietHoursEnd != null;
     }
 }
