@@ -10,14 +10,15 @@ import com.taskmanager.observer.NotificationObserver;
 import com.taskmanager.observer.NotificationSubject;
 import com.taskmanager.repository.ReminderRepository;
 import com.taskmanager.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,13 +26,22 @@ import java.util.List;
  * Acts as the Subject that notifies observers when events occur
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class NotificationService implements NotificationSubject {
-    
+
     private final ReminderRepository reminderRepository;
     private final UserRepository userRepository;
-    private final List<NotificationObserver> observers;
+    private final List<NotificationObserver> observers = new ArrayList<>();
+
+    public NotificationService(ReminderRepository reminderRepository,
+                               UserRepository userRepository,
+                               @Autowired(required = false) List<NotificationObserver> observers) {
+        this.reminderRepository = reminderRepository;
+        this.userRepository = userRepository;
+        if (observers != null) {
+            this.observers.addAll(observers);
+        }
+    }
     
     @Override
     public void registerObserver(NotificationObserver observer) {

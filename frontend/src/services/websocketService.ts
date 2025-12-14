@@ -14,7 +14,8 @@ class WebSocketService {
       return;
     }
 
-    const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+    // Use relative URL for Docker deployment (nginx proxy) or fallback to localhost for dev
+    const wsUrl = import.meta.env.VITE_WS_URL || '/ws';
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(wsUrl),
