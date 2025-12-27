@@ -31,4 +31,14 @@ public class UpdateTaskRequest {
     private Integer estimatedDuration;
     private Long projectId;
     private List<Long> contextIds;
+    private List<ReminderRequest> reminders;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReminderRequest {
+        private Integer leadTimeMinutes;
+        private String notificationType;
+    }
 }

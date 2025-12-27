@@ -22,6 +22,10 @@ const notificationService = {
     return response.data.data;
   },
 
+  async deleteNotification(id) {
+    await api.delete(API_ENDPOINTS.NOTIFICATIONS.DELETE(id));
+  },
+
   async snoozeNotification(id, minutes = 15) {
     const response = await api.post(
       API_ENDPOINTS.NOTIFICATIONS.SNOOZE(id),
@@ -33,3 +37,4 @@ const notificationService = {
 };
 
 export default notificationService;
+

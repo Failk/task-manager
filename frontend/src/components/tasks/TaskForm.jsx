@@ -228,33 +228,55 @@ const TaskForm = ({ task, onSubmit, onCancel }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date
-              </label>
-              <input
-                type="date"
-                name="dueDate"
-                value={formData.dueDate}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
+          {/* Due Date/Time - Only for one-time tasks */}
+          {formData.taskType === 'ONE_TIME' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                  className="input"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Time
-              </label>
-              <input
-                type="time"
-                name="dueTime"
-                value={formData.dueTime}
-                onChange={handleChange}
-                className="input"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Time
+                </label>
+                <input
+                  type="time"
+                  name="dueTime"
+                  value={formData.dueTime}
+                  onChange={handleChange}
+                  className="input"
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Time field for recurring tasks */}
+          {formData.taskType === 'RECURRING' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Task Time
+                </label>
+                <input
+                  type="time"
+                  name="dueTime"
+                  value={formData.dueTime}
+                  onChange={handleChange}
+                  className="input"
+                />
+                <p className="text-xs text-gray-500 mt-1">Time for each recurring instance</p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

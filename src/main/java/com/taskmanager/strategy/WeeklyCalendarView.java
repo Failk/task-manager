@@ -25,46 +25,51 @@ public class WeeklyCalendarView implements CalendarViewStrategy {
     @Override
     public CalendarViewDTO generateView(Long userId, LocalDate referenceDate) {
         LocalDate date = referenceDate != null ? referenceDate : LocalDate.now();
-        
+
         // Get start and end of the week (Monday to Sunday)
         LocalDate startOfWeek = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endOfWeek = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
         // Get tasks for the week
         List<Task> tasks = taskRepository.findByUserIdAndDueDateBetween(userId, startOfWeek, endOfWeek);
-        
+
         // Get recurring task instances for the week
         List<TaskInstance> instances = taskInstanceRepository.findByUserIdAndScheduledDateBetween(
                 userId, startOfWeek, endOfWeek);
 
-        Map<LocalDate, List<CalendarViewDTO.CalendarTaskDTO>> tasksByDate = new LinkedHashMap<>();
+        Map<String, List<CalendarViewDTO.CalendarTaskDTO>> tasksByDate = new LinkedHashMap<>();
         List<CalendarViewDTO.CalendarTaskDTO> allTasks = new ArrayList<>();
 
-        // Initialize all days of the week
+        // Initialize all days of the week with ISO date string keys
         for (LocalDate d = startOfWeek; !d.isAfter(endOfWeek); d = d.plusDays(1)) {
-            tasksByDate.put(d, new ArrayList<>());
+            tasksByDate.put(d.toString(), new ArrayList<>());
         }
 
         // Add one-time tasks
         for (Task task : tasks) {
             if (task.getDueDate() != null) {
                 CalendarViewDTO.CalendarTaskDTO dto = mapTaskToCalendarDTO(task, null);
-                tasksByDate.get(task.getDueDate()).add(dto);
-                allTasks.add(dto);
+                String dateKey = task.getDueDate().toString();
+                if (tasksByDate.containsKey(dateKey)) {
+                    tasksByDate.get(dateKey).add(dto);
+                    allTasks.add(dto);
+                }
             }
         }
 
         // Add recurring task instances
         for (TaskInstance instance : instances) {
             CalendarViewDTO.CalendarTaskDTO dto = mapTaskToCalendarDTO(instance.getRecurringTask(), instance);
-            tasksByDate.get(instance.getScheduledDate()).add(dto);
-            allTasks.add(dto);
+            String dateKey = instance.getScheduledDate().toString();
+            if (tasksByDate.containsKey(dateKey)) {
+                tasksByDate.get(dateKey).add(dto);
+                allTasks.add(dto);
+            }
         }
 
         // Sort tasks within each day
-        tasksByDate.values().forEach(dayTasks -> 
-                dayTasks.sort(Comparator.comparing(
-                        t -> t.getDueTime() != null ? t.getDueTime() : "23:59")));
+        tasksByDate.values().forEach(dayTasks -> dayTasks.sort(Comparator.comparing(
+                t -> t.getDueTime() != null ? t.getDueTime() : "23:59")));
 
         return CalendarViewDTO.builder()
                 .viewType(getViewType())

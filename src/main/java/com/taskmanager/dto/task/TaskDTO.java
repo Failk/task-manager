@@ -19,6 +19,7 @@ import java.util.List;
 public class TaskDTO {
 
     private Long id;
+    private Long instanceId; // For recurring task instances
     private String title;
     private String description;
     private Priority priority;

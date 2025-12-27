@@ -24,6 +24,7 @@ public class ProjectService {
     private final UserService userService;
     private final AuditService auditService;
 
+    @Transactional(readOnly = true)
     public List<ProjectDTO> getAllProjects() {
         User user = userService.getCurrentUser();
         return projectRepository.findByUserIdAndArchivedFalseOrderByCreatedAtDesc(user.getId())
@@ -32,6 +33,7 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ProjectDTO> getArchivedProjects() {
         User user = userService.getCurrentUser();
         return projectRepository.findByUserIdAndArchivedTrueOrderByUpdatedAtDesc(user.getId())
@@ -40,6 +42,7 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ProjectDTO getProjectById(Long id) {
         User user = userService.getCurrentUser();
         Project project = projectRepository.findByIdAndUserIdWithTasks(id, user.getId())
@@ -61,7 +64,7 @@ public class ProjectService {
 
         project = projectRepository.save(project);
         log.info("Project created: {} by user: {}", project.getName(), user.getEmail());
-        
+
         auditService.logAction("Project", project.getId(), "CREATE", null, project.toString());
 
         return mapToDTO(project);
@@ -90,7 +93,7 @@ public class ProjectService {
 
         project = projectRepository.save(project);
         log.info("Project updated: {} by user: {}", project.getName(), user.getEmail());
-        
+
         auditService.logAction("Project", project.getId(), "UPDATE", oldValues, project.toString());
 
         return mapToDTO(project);
@@ -103,7 +106,7 @@ public class ProjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
 
         auditService.logAction("Project", project.getId(), "DELETE", project.toString(), null);
-        
+
         projectRepository.delete(project);
         log.info("Project deleted: {} by user: {}", project.getName(), user.getEmail());
     }
@@ -117,7 +120,7 @@ public class ProjectService {
         project.setArchived(true);
         project = projectRepository.save(project);
         log.info("Project archived: {} by user: {}", project.getName(), user.getEmail());
-        
+
         auditService.logAction("Project", project.getId(), "ARCHIVE", "archived=false", "archived=true");
 
         return mapToDTO(project);
@@ -132,7 +135,7 @@ public class ProjectService {
         project.setArchived(false);
         project = projectRepository.save(project);
         log.info("Project unarchived: {} by user: {}", project.getName(), user.getEmail());
-        
+
         auditService.logAction("Project", project.getId(), "UNARCHIVE", "archived=true", "archived=false");
 
         return mapToDTO(project);

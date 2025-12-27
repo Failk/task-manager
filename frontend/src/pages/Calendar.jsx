@@ -86,15 +86,14 @@ const Calendar = () => {
             {tasks.map(task => (
               <div
                 key={task.id}
-                className={`p-4 rounded-lg border-l-4 ${
-                  task.priority === 'A'
+                className={`p-4 rounded-lg border-l-4 ${task.priority === 'A'
                     ? 'border-red-500 bg-red-50'
                     : task.priority === 'B'
-                    ? 'border-amber-500 bg-amber-50'
-                    : task.priority === 'C'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-500 bg-gray-50'
-                }`}
+                      ? 'border-amber-500 bg-amber-50'
+                      : task.priority === 'C'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-500 bg-gray-50'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -146,15 +145,14 @@ const Calendar = () => {
                 {tasks.slice(0, 3).map(task => (
                   <div
                     key={task.id}
-                    className={`text-xs p-2 rounded border-l-2 ${
-                      task.priority === 'A'
+                    className={`text-xs p-2 rounded border-l-2 ${task.priority === 'A'
                         ? 'border-red-500 bg-red-50'
                         : task.priority === 'B'
-                        ? 'border-amber-500 bg-amber-50'
-                        : task.priority === 'C'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-500 bg-gray-50'
-                    }`}
+                          ? 'border-amber-500 bg-amber-50'
+                          : task.priority === 'C'
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-500 bg-gray-50'
+                      }`}
                   >
                     <div className="font-medium text-gray-900 truncate">{task.title}</div>
                     {task.dueTime && (
@@ -202,9 +200,8 @@ const Calendar = () => {
             return (
               <div
                 key={dateKey}
-                className={`min-h-24 p-2 border rounded ${
-                  isToday ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                } ${!isCurrentMonth ? 'opacity-40' : ''}`}
+                className={`min-h-24 p-2 border rounded ${isToday ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
+                  } ${!isCurrentMonth ? 'opacity-40' : ''}`}
               >
                 <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary-600' : 'text-gray-900'}`}>
                   {format(day, 'd')}
@@ -214,15 +211,14 @@ const Calendar = () => {
                   {tasks.slice(0, 2).map(task => (
                     <div
                       key={task.id}
-                      className={`text-xs p-1 rounded ${
-                        task.priority === 'A'
+                      className={`text-xs p-1 rounded ${task.priority === 'A'
                           ? 'bg-red-100'
                           : task.priority === 'B'
-                          ? 'bg-amber-100'
-                          : task.priority === 'C'
-                          ? 'bg-blue-100'
-                          : 'bg-gray-100'
-                      }`}
+                            ? 'bg-amber-100'
+                            : task.priority === 'C'
+                              ? 'bg-blue-100'
+                              : 'bg-gray-100'
+                        }`}
                     >
                       <div className="truncate">{task.title}</div>
                     </div>
@@ -256,25 +252,22 @@ const Calendar = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setView('DAILY')}
-              className={`px-4 py-2 rounded-lg ${
-                view === 'DAILY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
+              className={`px-4 py-2 rounded-lg ${view === 'DAILY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}
             >
               Daily
             </button>
             <button
               onClick={() => setView('WEEKLY')}
-              className={`px-4 py-2 rounded-lg ${
-                view === 'WEEKLY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
+              className={`px-4 py-2 rounded-lg ${view === 'WEEKLY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}
             >
               Weekly
             </button>
             <button
               onClick={() => setView('MONTHLY')}
-              className={`px-4 py-2 rounded-lg ${
-                view === 'MONTHLY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
+              className={`px-4 py-2 rounded-lg ${view === 'MONTHLY' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}
             >
               Monthly
             </button>
@@ -284,11 +277,18 @@ const Calendar = () => {
             <button onClick={handlePrevious} className="btn-secondary p-2">
               <FiChevronLeft size={20} />
             </button>
-            <button onClick={handleToday} className="btn-secondary">
-              Today
-            </button>
+            <div className="min-w-[180px] text-center">
+              <span className="font-medium text-gray-900">
+                {view === 'DAILY' && format(currentDate, 'MMMM d, yyyy')}
+                {view === 'WEEKLY' && `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d')} - ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d, yyyy')}`}
+                {view === 'MONTHLY' && format(currentDate, 'MMMM yyyy')}
+              </span>
+            </div>
             <button onClick={handleNext} className="btn-secondary p-2">
               <FiChevronRight size={20} />
+            </button>
+            <button onClick={handleToday} className="btn-secondary ml-2">
+              Today
             </button>
           </div>
         </div>

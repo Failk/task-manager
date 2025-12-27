@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: taskmanager
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      TZ: Europe/Moscow
     ports:
       - "5432:5432"
     volumes:
@@ -35,6 +36,8 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+      TZ: Europe/Moscow
+      JAVA_OPTS: "-Duser.timezone=Europe/Moscow"
     ports:
       - "8080:8080"
     depends_on:

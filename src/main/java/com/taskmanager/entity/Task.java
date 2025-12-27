@@ -72,11 +72,7 @@ public abstract class Task {
     private User user;
 
     @ManyToMany
-    @JoinTable(
-            name = "task_contexts",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "context_id")
-    )
+    @JoinTable(name = "task_contexts", joinColumns = @JoinColumn(name = "task_id"), inverseJoinColumns = @JoinColumn(name = "context_id"))
     @Builder.Default
     private Set<Context> contexts = new HashSet<>();
 
@@ -87,6 +83,10 @@ public abstract class Task {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TaskComment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

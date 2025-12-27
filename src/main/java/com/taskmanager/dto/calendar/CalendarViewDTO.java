@@ -19,7 +19,7 @@ public class CalendarViewDTO {
     private String viewType; // DAILY, WEEKLY, MONTHLY
     private LocalDate startDate;
     private LocalDate endDate;
-    private Map<LocalDate, List<CalendarTaskDTO>> tasksByDate;
+    private Map<String, List<CalendarTaskDTO>> tasksByDate; // Key is ISO date string (yyyy-MM-dd)
     private CalendarSummary summary;
 
     @Data

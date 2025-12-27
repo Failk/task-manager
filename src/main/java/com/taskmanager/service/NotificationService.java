@@ -13,6 +13,8 @@ import com.taskmanager.repository.ReminderRepository;
 import com.taskmanager.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +34,9 @@ public class NotificationService {
     private final TaskRepository taskRepository;
     private final UserService userService;
     private final NotificationSubject notificationSubject;
+    private final JavaMailSender mailSender;
 
+    @Transactional(readOnly = true)
     public List<NotificationDTO> getAllNotifications() {
         User user = userService.getCurrentUser();
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
@@ -41,6 +45,7 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<NotificationDTO> getUnreadNotifications() {
         User user = userService.getCurrentUser();
         return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(user.getId())
@@ -49,6 +54,7 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public long getUnreadCount() {
         User user = userService.getCurrentUser();
         return notificationRepository.countByUserIdAndReadFalse(user.getId());
@@ -63,8 +69,34 @@ public class NotificationService {
 
         notification.markAsRead();
         notification = notificationRepository.save(notification);
-        
+
         return mapToDTO(notification);
+    }
+
+    @Transactional
+    public void deleteNotification(Long id) {
+        User user = userService.getCurrentUser();
+        Notification notification = notificationRepository.findById(id)
+                .filter(n -> n.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", id));
+
+        notificationRepository.delete(notification);
+        log.info("Notification {} deleted by user {}", id, user.getEmail());
+    }
+
+    @Transactional
+    public void snoozeNotification(Long id, int minutes) {
+        User user = userService.getCurrentUser();
+        Notification notification = notificationRepository.findById(id)
+                .filter(n -> n.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", id));
+
+        // Mark as read for now (it will "reappear" as a new notification after snooze
+        // time)
+        notification.markAsRead();
+        notificationRepository.save(notification);
+
+        log.info("Notification {} snoozed for {} minutes by user {}", id, minutes, user.getEmail());
     }
 
     @Transactional
@@ -122,7 +154,7 @@ public class NotificationService {
     @Transactional
     public void checkOverdueTasks() {
         log.info("Checking for overdue tasks...");
-        
+
         List<Task> allTasks = taskRepository.findAll();
         LocalDate today = LocalDate.now();
 
@@ -135,8 +167,7 @@ public class NotificationService {
                         "Task Overdue",
                         String.format("Task '%s' is overdue. Due date was: %s",
                                 task.getTitle(), task.getDueDate()),
-                        NotificationType.POPUP
-                );
+                        NotificationType.POPUP);
             }
         }
     }
@@ -165,7 +196,7 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         // Notify through observers
-        notificationSubject.notifyObservers(user, reminder, message, 
+        notificationSubject.notifyObservers(user, reminder, message,
                 reminder.getNotificationType().name());
 
         // Mark reminder as sent
@@ -185,5 +216,41 @@ public class NotificationService {
                 .taskId(notification.getTask() != null ? notification.getTask().getId() : null)
                 .taskTitle(notification.getTask() != null ? notification.getTask().getTitle() : null)
                 .build();
+    }
+
+    /**
+     * Sends a test email to the current user to verify email configuration.
+     * 
+     * @return Success or error message
+     */
+    public String sendTestEmail() {
+        User user = userService.getCurrentUser();
+
+        try {
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setTo(user.getEmail());
+            mailMessage.setSubject("Test Email from Task Manager");
+            mailMessage.setText(buildTestEmailContent(user));
+
+            mailSender.send(mailMessage);
+            log.info("Test email sent successfully to {}", user.getEmail());
+            return "Test email sent successfully to " + user.getEmail();
+        } catch (Exception e) {
+            log.error("Failed to send test email to {}: {}", user.getEmail(), e.getMessage());
+            throw new RuntimeException("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    private String buildTestEmailContent(User user) {
+        StringBuilder content = new StringBuilder();
+        content.append("Hello ").append(user.getFirstName()).append(",\n\n");
+        content.append("This is a test email from your Task Manager application.\n\n");
+        content.append("If you received this email, your email configuration is working correctly!\n\n");
+        content.append("Configuration Details:\n");
+        content.append("- Email: ").append(user.getEmail()).append("\n");
+        content.append("- Sent at: ").append(LocalDateTime.now()).append("\n\n");
+        content.append("Best regards,\n");
+        content.append("Smart Task Manager");
+        return content.toString();
     }
 }

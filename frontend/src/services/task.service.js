@@ -69,6 +69,14 @@ const taskService = {
     const response = await api.get(API_ENDPOINTS.TASKS.BY_CONTEXT(contextId));
     return response.data.data || [];
   },
+
+  async updateInstanceStatus(instanceId, status) {
+    await api.put(
+      API_ENDPOINTS.TASKS.INSTANCE_STATUS(instanceId),
+      null,
+      { params: { status } }
+    );
+  },
 };
 
 export default taskService;

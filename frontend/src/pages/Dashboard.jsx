@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiCheckSquare, FiClock, FiAlertCircle, FiTrendingUp } from 'react-icons/fi';
 import taskService from '../services/task.service';
@@ -7,6 +7,7 @@ import projectService from '../services/project.service';
 import TaskCard from '../components/tasks/TaskCard';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     todayTasks: 0,
     overdueTasks: 0,
@@ -55,6 +56,41 @@ const Dashboard = () => {
       loadDashboardData();
     } catch (error) {
       toast.error('Failed to complete task');
+    }
+  };
+
+  const handleEditTask = (task) => {
+    // Navigate to tasks page - the user can edit from there
+    navigate('/tasks');
+  };
+
+  const handleDeleteTask = async (task) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) {
+      return;
+    }
+
+    try {
+      await taskService.deleteTask(task.id);
+      toast.success('Task deleted');
+      loadDashboardData();
+    } catch (error) {
+      toast.error('Failed to delete task');
+    }
+  };
+
+
+  const handleStatusChange = async (task, status) => {
+    try {
+      // Check if this is a recurring task instance
+      if (task.instanceId) {
+        await taskService.updateInstanceStatus(task.instanceId, status);
+      } else {
+        await taskService.updateTaskStatus(task.id, status);
+      }
+      toast.success(`Task marked as ${status.replace('_', ' ').toLowerCase()}`);
+      loadDashboardData();
+    } catch (error) {
+      toast.error('Failed to update task status');
     }
   };
 
@@ -146,8 +182,9 @@ const Dashboard = () => {
                   key={task.id}
                   task={task}
                   onComplete={handleCompleteTask}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
+                  onEdit={handleEditTask}
+                  onDelete={handleDeleteTask}
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </div>
@@ -176,13 +213,13 @@ const Dashboard = () => {
                       {project.completedTasks || 0} / {project.totalTasks || 0} tasks
                     </span>
                     <span className="text-primary-600 font-medium">
-                      {project.completionPercentage || 0}%
+                      {Math.round(project.completionPercentage || 0)}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div
                       className="bg-primary-600 h-2 rounded-full transition-all"
-                      style={{ width: `${project.completionPercentage || 0}%` }}
+                      style={{ width: `${Math.round(project.completionPercentage || 0)}%` }}
                     />
                   </div>
                 </div>
@@ -196,3 +233,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

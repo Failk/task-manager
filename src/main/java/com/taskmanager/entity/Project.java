@@ -63,22 +63,45 @@ public class Project {
     }
 
     public double getCompletionPercentage() {
-        if (tasks.isEmpty()) {
+        int totalCount = getTotalTasks();
+        if (totalCount == 0) {
             return 0.0;
         }
-        long completedTasks = tasks.stream()
-                .filter(task -> task.getStatus() == com.taskmanager.entity.enums.TaskStatus.COMPLETED)
-                .count();
-        return (double) completedTasks / tasks.size() * 100;
+        return (double) getCompletedTasks() / totalCount * 100;
     }
 
     public int getTotalTasks() {
-        return tasks.size();
+        int count = 0;
+        for (Task task : tasks) {
+            if (task instanceof RecurringTask) {
+                RecurringTask rt = (RecurringTask) task;
+                // Count all instances for recurring tasks
+                int instanceCount = rt.getTaskInstances().size();
+                count += instanceCount > 0 ? instanceCount : 1; // At least 1 if no instances yet
+            } else {
+                // Count one-time tasks as 1
+                count += 1;
+            }
+        }
+        return count;
     }
 
     public int getCompletedTasks() {
-        return (int) tasks.stream()
-                .filter(task -> task.getStatus() == com.taskmanager.entity.enums.TaskStatus.COMPLETED)
-                .count();
+        int count = 0;
+        for (Task task : tasks) {
+            if (task instanceof RecurringTask) {
+                RecurringTask rt = (RecurringTask) task;
+                // Count completed instances for recurring tasks
+                count += (int) rt.getTaskInstances().stream()
+                        .filter(ti -> ti.getStatus() == com.taskmanager.entity.enums.TaskStatus.COMPLETED)
+                        .count();
+            } else {
+                // Count completed one-time tasks
+                if (task.getStatus() == com.taskmanager.entity.enums.TaskStatus.COMPLETED) {
+                    count += 1;
+                }
+            }
+        }
+        return count;
     }
 }

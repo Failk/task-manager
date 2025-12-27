@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/tasks/${id}`,
     COMPLETE: (id) => `/tasks/${id}/complete`,
     UPDATE_STATUS: (id) => `/tasks/${id}/status`,
+    INSTANCE_STATUS: (instanceId) => `/tasks/instance/${instanceId}/status`,
     BY_PROJECT: (projectId) => `/tasks/project/${projectId}`,
     BY_CONTEXT: (contextId) => `/tasks/context/${contextId}`,
   },
@@ -55,6 +56,7 @@ export const API_ENDPOINTS = {
     COUNT: '/notifications/count',
     ACKNOWLEDGE: (id) => `/notifications/${id}/acknowledge`,
     SNOOZE: (id) => `/notifications/${id}/snooze`,
+    DELETE: (id) => `/notifications/${id}`,
   },
   // Contexts
   CONTEXTS: {

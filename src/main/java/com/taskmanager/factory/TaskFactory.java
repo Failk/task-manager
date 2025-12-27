@@ -93,9 +93,10 @@ public class TaskFactory {
                 .endDate(patternRequest.getEndDate())
                 .occurrences(patternRequest.getOccurrences())
                 .build();
-        
+
         task.setRecurrencePattern(pattern);
-        task.setDueDate(patternRequest.getStartDate());
+
+        // Note: Recurring tasks don't have a dueDate - they have task instances instead
 
         // Create reminders
         if (request.getReminders() != null) {
@@ -109,19 +110,25 @@ public class TaskFactory {
     }
 
     private Reminder createReminder(CreateOneTimeTaskRequest.ReminderRequest request, Task task) {
-        LocalDateTime remindAt = null;
-        if (task.getDueDate() != null && request.getLeadTimeMinutes() != null) {
-            LocalDateTime dueDateTime = task.getDueTime() != null 
+        LocalDateTime remindAt;
+        Integer leadMinutes = request.getLeadTimeMinutes() != null ? request.getLeadTimeMinutes() : 0;
+
+        if (task.getDueDate() != null) {
+            LocalDateTime dueDateTime = task.getDueTime() != null
                     ? LocalDateTime.of(task.getDueDate(), task.getDueTime())
                     : task.getDueDate().atStartOfDay();
-            remindAt = dueDateTime.minusMinutes(request.getLeadTimeMinutes());
+            remindAt = dueDateTime.minusMinutes(leadMinutes);
+        } else {
+            // If no due date, set reminder to current time (will trigger on next schedule
+            // run)
+            remindAt = LocalDateTime.now();
         }
 
         return Reminder.builder()
                 .task(task)
-                .leadTimeMinutes(request.getLeadTimeMinutes())
+                .leadTimeMinutes(leadMinutes)
                 .remindAt(remindAt)
-                .notificationType(request.getNotificationType() != null 
+                .notificationType(request.getNotificationType() != null
                         ? NotificationType.valueOf(request.getNotificationType())
                         : NotificationType.POPUP)
                 .build();

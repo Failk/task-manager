@@ -128,9 +128,8 @@ const Projects = () => {
           {projects.map(project => (
             <div
               key={project.id}
-              className={`card hover:shadow-lg transition-shadow ${
-                project.archived ? 'opacity-60' : ''
-              }`}
+              className={`card hover:shadow-lg transition-shadow ${project.archived ? 'opacity-60' : ''
+                }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -174,13 +173,13 @@ const Projects = () => {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Progress</span>
                   <span className="text-primary-600 font-medium">
-                    {project.completionPercentage || 0}%
+                    {Math.round(project.completionPercentage || 0)}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-primary-600 h-2 rounded-full transition-all"
-                    style={{ width: `${project.completionPercentage || 0}%` }}
+                    style={{ width: `${Math.round(project.completionPercentage || 0)}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">

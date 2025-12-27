@@ -23,14 +23,14 @@ public class DailyCalendarView implements CalendarViewStrategy {
     @Override
     public CalendarViewDTO generateView(Long userId, LocalDate referenceDate) {
         LocalDate date = referenceDate != null ? referenceDate : LocalDate.now();
-        
+
         // Get one-time tasks for the day
         List<Task> tasks = taskRepository.findByUserIdAndDueDate(userId, date);
-        
+
         // Get recurring task instances for the day
         List<TaskInstance> instances = taskInstanceRepository.findByUserIdAndScheduledDate(userId, date);
 
-        Map<LocalDate, List<CalendarViewDTO.CalendarTaskDTO>> tasksByDate = new HashMap<>();
+        Map<String, List<CalendarViewDTO.CalendarTaskDTO>> tasksByDate = new HashMap<>();
         List<CalendarViewDTO.CalendarTaskDTO> dayTasks = new ArrayList<>();
 
         // Add one-time tasks
@@ -47,7 +47,7 @@ public class DailyCalendarView implements CalendarViewStrategy {
         dayTasks.sort(Comparator.comparing(
                 t -> t.getDueTime() != null ? t.getDueTime() : "23:59"));
 
-        tasksByDate.put(date, dayTasks);
+        tasksByDate.put(date.toString(), dayTasks);
 
         return CalendarViewDTO.builder()
                 .viewType(getViewType())

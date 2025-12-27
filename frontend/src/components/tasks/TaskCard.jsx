@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { FiClock, FiFolder, FiTag, FiCheck, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiClock, FiFolder, FiTag, FiCheck, FiEdit, FiTrash2, FiPlay, FiPause, FiX } from 'react-icons/fi';
 
-const TaskCard = ({ task, onComplete, onEdit, onDelete }) => {
+const TaskCard = ({ task, onComplete, onEdit, onDelete, onStatusChange }) => {
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+
   const priorityColors = {
     A: 'border-l-4 border-red-500',
     B: 'border-l-4 border-amber-500',
@@ -10,31 +12,86 @@ const TaskCard = ({ task, onComplete, onEdit, onDelete }) => {
     D: 'border-l-4 border-gray-500',
   };
 
+  const statusOptions = [
+    { value: 'NOT_STARTED', label: 'Not Started', icon: FiPause, color: 'text-gray-600' },
+    { value: 'IN_PROGRESS', label: 'In Progress', icon: FiPlay, color: 'text-blue-600' },
+    { value: 'COMPLETED', label: 'Completed', icon: FiCheck, color: 'text-green-600' },
+    { value: 'CANCELLED', label: 'Cancelled', icon: FiX, color: 'text-red-600' },
+  ];
+
   const isOverdue = task.overdue && task.status !== 'COMPLETED';
 
+  const handleStatusClick = (e) => {
+    e.stopPropagation();
+    setShowStatusMenu(!showStatusMenu);
+  };
+
+  const handleStatusSelect = (status) => {
+    setShowStatusMenu(false);
+    if (status !== task.status) {
+      if (onStatusChange) {
+        onStatusChange(task, status);
+      } else if (status === 'COMPLETED') {
+        onComplete(task);
+      }
+    }
+  };
+
+  const currentStatus = statusOptions.find(s => s.value === task.status) || statusOptions[0];
+  const StatusIcon = currentStatus.icon;
+
   return (
-    <div className={`card hover:shadow-lg transition-shadow ${priorityColors[task.priority]} ${
-      task.status === 'COMPLETED' ? 'opacity-60' : ''
-    }`}>
+    <div className={`card hover:shadow-lg transition-shadow ${priorityColors[task.priority]} ${task.status === 'COMPLETED' ? 'opacity-60' : ''
+      }`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3">
-            <button
-              onClick={() => onComplete(task)}
-              disabled={task.status === 'COMPLETED'}
-              className={`mt-1 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                task.status === 'COMPLETED'
-                  ? 'bg-green-500 border-green-500'
-                  : 'border-gray-300 hover:border-primary-500'
-              }`}
-            >
-              {task.status === 'COMPLETED' && <FiCheck className="text-white" size={14} />}
-            </button>
+            {/* Status button with dropdown */}
+            <div className="relative mt-1">
+              <button
+                onClick={handleStatusClick}
+                className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${task.status === 'COMPLETED'
+                    ? 'bg-green-500 border-green-500'
+                    : task.status === 'IN_PROGRESS'
+                      ? 'bg-blue-500 border-blue-500'
+                      : task.status === 'CANCELLED'
+                        ? 'bg-red-500 border-red-500'
+                        : 'border-gray-300 hover:border-primary-500'
+                  }`}
+                title="Change status"
+              >
+                <StatusIcon className={task.status === 'NOT_STARTED' ? 'text-gray-400' : 'text-white'} size={14} />
+              </button>
+
+              {showStatusMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowStatusMenu(false)}
+                  />
+                  <div className="absolute left-0 top-8 bg-white rounded-lg shadow-lg border py-1 z-20 min-w-[140px]">
+                    {statusOptions.map((option) => {
+                      const Icon = option.icon;
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => handleStatusSelect(option.value)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 ${task.status === option.value ? 'bg-gray-50 font-medium' : ''
+                            } ${option.color}`}
+                        >
+                          <Icon size={14} />
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className={`font-medium text-gray-900 mb-1 ${
-                task.status === 'COMPLETED' ? 'line-through' : ''
-              }`}>
+              <h3 className={`font-medium text-gray-900 mb-1 ${task.status === 'COMPLETED' ? 'line-through' : ''
+                }`}>
                 {task.title}
               </h3>
 
@@ -108,3 +165,4 @@ const TaskCard = ({ task, onComplete, onEdit, onDelete }) => {
 };
 
 export default TaskCard;
+

@@ -76,7 +76,20 @@ const Tasks = () => {
 
   const handleUpdateTask = async (taskData) => {
     try {
-      await taskService.updateTask(editingTask.id, taskData);
+      // Clean up data - include reminders for update
+      const cleanedData = {
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate || null,
+        dueTime: taskData.dueTime || null,
+        estimatedDuration: taskData.estimatedDuration || null,
+        projectId: taskData.projectId || null,
+        contextIds: taskData.contextIds || [],
+        reminders: taskData.reminders || [],
+      };
+
+      await taskService.updateTask(editingTask.id, cleanedData);
       toast.success('Task updated successfully');
       setShowForm(false);
       setEditingTask(null);
@@ -113,6 +126,22 @@ const Tasks = () => {
   const handleEditTask = (task) => {
     setEditingTask(task);
     setShowForm(true);
+  };
+
+
+  const handleStatusChange = async (task, status) => {
+    try {
+      // Check if this is a recurring task instance
+      if (task.instanceId) {
+        await taskService.updateInstanceStatus(task.instanceId, status);
+      } else {
+        await taskService.updateTaskStatus(task.id, status);
+      }
+      toast.success(`Task marked as ${status.replace('_', ' ').toLowerCase()}`);
+      loadTasks();
+    } catch (error) {
+      toast.error('Failed to update task status');
+    }
   };
 
   const groupTasksByPriority = () => {
@@ -233,6 +262,7 @@ const Tasks = () => {
                       onComplete={handleCompleteTask}
                       onEdit={handleEditTask}
                       onDelete={handleDeleteTask}
+                      onStatusChange={handleStatusChange}
                     />
                   ))}
                 </div>

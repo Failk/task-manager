@@ -123,4 +123,13 @@ public class TaskController {
         List<TaskDTO> tasks = taskService.getTasksByContext(contextId);
         return ResponseEntity.ok(ApiResponse.success(tasks));
     }
+
+    @Operation(summary = "Update task instance status (for recurring tasks)")
+    @PutMapping("/instance/{instanceId}/status")
+    public ResponseEntity<ApiResponse<Void>> updateInstanceStatus(
+            @PathVariable Long instanceId,
+            @RequestParam TaskStatus status) {
+        taskService.updateTaskInstanceStatus(instanceId, status);
+        return ResponseEntity.ok(ApiResponse.success("Task instance status updated", null));
+    }
 }

@@ -50,12 +50,26 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.success("Notification acknowledged", notification));
     }
 
-    @Operation(summary = "Snooze notification/reminder")
+    @Operation(summary = "Delete notification")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteNotification(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.ok(ApiResponse.success("Notification deleted", null));
+    }
+
+    @Operation(summary = "Snooze notification", description = "Snoozes the notification for specified minutes")
     @PostMapping("/{id}/snooze")
     public ResponseEntity<ApiResponse<Void>> snoozeNotification(
             @PathVariable Long id,
             @RequestParam(defaultValue = "15") int minutes) {
-        notificationService.snoozeReminder(id, minutes);
+        notificationService.snoozeNotification(id, minutes);
         return ResponseEntity.ok(ApiResponse.success("Notification snoozed for " + minutes + " minutes", null));
+    }
+
+    @Operation(summary = "Test email configuration", description = "Sends a test email to the current user to verify email settings are working")
+    @PostMapping("/test-email")
+    public ResponseEntity<ApiResponse<String>> testEmail() {
+        String result = notificationService.sendTestEmail();
+        return ResponseEntity.ok(ApiResponse.success(result, result));
     }
 }

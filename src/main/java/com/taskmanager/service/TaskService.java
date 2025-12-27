@@ -44,10 +44,23 @@ public class TaskService {
     public List<TaskDTO> getTasksForToday() {
         User user = userService.getCurrentUser();
         LocalDate today = LocalDate.now();
-        return taskRepository.findByUserIdAndDueDate(user.getId(), today)
+
+        // Get one-time tasks for today
+        List<TaskDTO> regularTasks = taskRepository.findByUserIdAndDueDate(user.getId(), today)
                 .stream()
+                .filter(task -> !(task instanceof RecurringTask)) // Exclude recurring parent tasks
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+
+        // Get recurring task instances for today
+        List<TaskDTO> recurringInstances = taskInstanceRepository.findByUserIdAndScheduledDate(user.getId(), today)
+                .stream()
+                .map(this::mapInstanceToDTO)
+                .collect(Collectors.toList());
+
+        // Combine both lists
+        regularTasks.addAll(recurringInstances);
+        return regularTasks;
     }
 
     @Transactional(readOnly = true)
@@ -187,11 +200,57 @@ public class TaskService {
             task.setContexts(contexts);
         }
 
+        // Handle reminders update
+        if (request.getReminders() != null) {
+            // Clear existing reminders
+            task.getReminders().clear();
+
+            // Add new reminders
+            for (UpdateTaskRequest.ReminderRequest reminderReq : request.getReminders()) {
+                Reminder reminder = createReminderForUpdate(reminderReq, task);
+                task.getReminders().add(reminder);
+            }
+        } else if (request.getDueDate() != null || request.getDueTime() != null) {
+            // Recalculate existing reminder times when due date/time changes
+            for (Reminder reminder : task.getReminders()) {
+                if (reminder.getLeadTimeMinutes() != null && task.getDueDate() != null) {
+                    java.time.LocalDateTime dueDateTime = task.getDueTime() != null
+                            ? java.time.LocalDateTime.of(task.getDueDate(), task.getDueTime())
+                            : task.getDueDate().atStartOfDay();
+                    reminder.setRemindAt(dueDateTime.minusMinutes(reminder.getLeadTimeMinutes()));
+                    reminder.setSent(false); // Reset sent status
+                }
+            }
+        }
+
         task = taskRepository.save(task);
         log.info("Task updated: {} by user: {}", task.getTitle(), user.getEmail());
         auditService.logAction("Task", task.getId(), "UPDATE", oldTitle, task.getTitle());
 
         return mapToDTO(task);
+    }
+
+    private Reminder createReminderForUpdate(UpdateTaskRequest.ReminderRequest request, Task task) {
+        java.time.LocalDateTime remindAt;
+        Integer leadMinutes = request.getLeadTimeMinutes() != null ? request.getLeadTimeMinutes() : 0;
+
+        if (task.getDueDate() != null) {
+            java.time.LocalDateTime dueDateTime = task.getDueTime() != null
+                    ? java.time.LocalDateTime.of(task.getDueDate(), task.getDueTime())
+                    : task.getDueDate().atStartOfDay();
+            remindAt = dueDateTime.minusMinutes(leadMinutes);
+        } else {
+            remindAt = java.time.LocalDateTime.now();
+        }
+
+        return Reminder.builder()
+                .task(task)
+                .leadTimeMinutes(leadMinutes)
+                .remindAt(remindAt)
+                .notificationType(request.getNotificationType() != null
+                        ? com.taskmanager.entity.enums.NotificationType.valueOf(request.getNotificationType())
+                        : com.taskmanager.entity.enums.NotificationType.POPUP)
+                .build();
     }
 
     @Transactional
@@ -323,5 +382,62 @@ public class TaskService {
         }
 
         return builder.build();
+    }
+
+    private TaskDTO mapInstanceToDTO(TaskInstance instance) {
+        Task task = instance.getRecurringTask();
+        TaskDTO.TaskDTOBuilder builder = TaskDTO.builder()
+                .id(task.getId())
+                .instanceId(instance.getId()) // Include instance ID for status updates
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .priority(task.getPriority())
+                .status(instance.getStatus()) // Use instance status, not parent status
+                .dueDate(instance.getScheduledDate()) // Use scheduled date
+                .dueTime(instance.getScheduledTime() != null ? instance.getScheduledTime() : task.getDueTime())
+                .estimatedDuration(task.getEstimatedDuration())
+                .completedAt(instance.getCompletedAt())
+                .createdAt(task.getCreatedAt())
+                .updatedAt(task.getUpdatedAt())
+                .taskType("RECURRING_INSTANCE") // Mark as instance
+                .overdue(instance.isOverdue());
+
+        if (task.getProject() != null) {
+            builder.projectId(task.getProject().getId())
+                    .projectName(task.getProject().getName());
+        }
+
+        if (task.getContexts() != null) {
+            builder.contexts(task.getContexts().stream()
+                    .map(c -> TaskDTO.ContextDTO.builder()
+                            .id(c.getId())
+                            .name(c.getName())
+                            .build())
+                    .collect(Collectors.toList()));
+        }
+
+        return builder.build();
+    }
+
+    @Transactional
+    public void updateTaskInstanceStatus(Long instanceId, TaskStatus status) {
+        User user = userService.getCurrentUser();
+        TaskInstance instance = taskInstanceRepository.findById(instanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("TaskInstance", "id", instanceId));
+
+        // Verify user owns this task
+        if (!instance.getRecurringTask().getUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("TaskInstance", "id", instanceId);
+        }
+
+        instance.setStatus(status);
+        if (status == TaskStatus.COMPLETED) {
+            instance.setCompletedAt(java.time.LocalDateTime.now());
+        } else {
+            instance.setCompletedAt(null);
+        }
+
+        taskInstanceRepository.save(instance);
+        log.info("Task instance {} status updated to {} by user {}", instanceId, status, user.getEmail());
     }
 }
